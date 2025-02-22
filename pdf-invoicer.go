@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thdelmas/pdf-invoicer.git/models"
+	"github.com/thdelmas/pdf-invoicer/models"
 )
 
 func GenerateInvoice(invoice models.Invoice, outputPath string) error {
