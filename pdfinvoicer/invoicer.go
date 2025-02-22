@@ -3,6 +3,7 @@ package pdfinvoicer
 import (
 	"errors"
 	"log"
+	"time"
 )
 
 type Address struct {
@@ -42,10 +43,10 @@ type Item struct {
 }
 
 type Invoice struct {
-	Number   string // Unique invoice number
-	EmitDate string // Invoice issue date
-	OpDate   string // Operation date (if different from issue date)
-	DueDate  string // Payment due date
+	Number   string    // Unique invoice number
+	EmitDate time.Time // Issuance date
+	OpDate   time.Time // Operation date
+	DueDate  time.Time // Due date
 
 	Issuer Issuer // Issuing company (Sociedad Limitada)
 	Client Client // Client receiving the invoice
@@ -219,22 +220,24 @@ func NewItem(description string, quantity, unitPrice, vatRate float64) (Item, er
 	return item, nil
 }
 
-func NewInvoice(number, emitDate, opDate, dueDate string, issuer Issuer, client Client, items []Item, notes, ref string) (Invoice, error) {
+func NewInvoice(number string, emitDate, opDate, dueDate time.Time, issuer Issuer, client Client, items []Item, notes, ref string) (Invoice, error) {
 	if number == "" {
 		err := errors.New("Invoice number is mandatory")
 		return Invoice{}, err
 	}
 
-	if emitDate == "" {
-		err := errors.New("Invoice emit date is mandatory")
+	// check dates
+	if emitDate.Before(opDate) {
+		err := errors.New("emission date must not be after operation date")
 		return Invoice{}, err
 	}
 
-	if dueDate == "" {
-		err := errors.New("Invoice due date is mandatory")
+	if opDate.After(dueDate) {
+		err := errors.New("operation date must be before due date")
 		return Invoice{}, err
 	}
 
+	// Check Items
 	if len(items) == 0 {
 		err := errors.New("Invoice must have at least one item")
 		return Invoice{}, err
