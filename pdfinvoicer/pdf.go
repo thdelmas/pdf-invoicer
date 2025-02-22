@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/thdelmas/pdf-invoicer/models"
 )
 
-func (i *Invoice) GeneratePDF(outputPath string) error {
+func (i *models.Invoice) GeneratePDF(outputPath string) error {
 	if err := i.validate(); err != nil {
 		return fmt.Errorf("invalid invoice data: %v", err)
 	}

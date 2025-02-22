@@ -1,39 +1,10 @@
 package pdfinvoicer
 
-import (
-	"time"
+import "github.com/thdelmas/pdf-invoicer/models"
 
-	"github.com/thdelmas/pdf-invoicer/invoicertypes"
-)
-
-type Invoice struct {
-	invoicertypes.Invoice
-}
-
-func NewInvoice(number string) *Invoice {
-	return &Invoice{
-		Invoice: invoicertypes.Invoice{
-			Number: number,
-			Date:   time.Now(),
-			Items:  make([]invoicertypes.Item, 0),
-		},
+func NewInvoice() models.Invoice {
+	return models.Invoice{
+		Issuer: NewIssuer(),
+		Client: NewClient(),
 	}
-}
-
-func (i *Invoice) AddItem(item invoicertypes.Item) {
-	i.Items = append(i.Items, item)
-	i.calculateTotals()
-}
-
-func (i *Invoice) calculateTotals() {
-	var totalNet, totalVAT float64
-
-	for _, item := range i.Items {
-		totalNet += item.UnitPrice * item.Quantity
-		totalVAT += item.VATAmount
-	}
-
-	i.TotalNet = totalNet
-	i.TotalVAT = totalVAT
-	i.TotalGross = totalNet + totalVAT
 }
