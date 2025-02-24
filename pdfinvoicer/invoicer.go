@@ -366,11 +366,12 @@ func formatAddress(address Address) string {
 	pdf.SetY(50)
 }*/
 
-func formatCurrency(amount float64) string {
-	// truncate to 2 decimal places (no round up)
-	amount = float64(int(amount*100)) / 100
+func truncateCurrency(amount float64) float64 {
+	return float64(int(amount*100)) / 100
+}
 
-	return fmt.Sprintf("%.3f EUR", amount)
+func formatCurrency(amount float64) string {
+	return fmt.Sprintf("%.2f EUR", amount)
 }
 
 func (i *Invoice) GeneratePDF(outputPath string) error {
@@ -423,7 +424,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	for _, item := range i.Items {
 		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
 		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
-		invoiceTotal += itemTotal
+		invoiceTotal += truncateCurrency(itemTotal)
 	}
 
 	// Invoice Summary in the same column
@@ -432,17 +433,18 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.Ln(2)
 	pdf.SetFont("Arial", "", 10)
 	// Invoice Number
-	pdf.CellFormat(95, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", true, 0, "")
 	// Emission Date
-	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	// Operation Date
 	if i.OpDate != i.EmitDate {
-		pdf.CellFormat(95, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 0, "L", false, 0, "")
+		pdf.CellFormat(95, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	}
 	// Due Date
-	pdf.CellFormat(95, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	// Total Amount
-	pdf.CellFormat(95, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(i.Total)), "0", 0, "L", false, 0, "")
+	invoiceTotal = truncateCurrency(invoiceTotal)
+	pdf.CellFormat(95, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(invoiceTotal)), "0", 1, "L", false, 0, "")
 	pdf.Ln(10)
 
 	// Amount breakdown table
@@ -459,6 +461,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	for _, item := range i.Items {
 		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
 		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
+		itemTotal = truncateCurrency(itemTotal)
 
 		startX := pdf.GetX()
 		startY := pdf.GetY()
