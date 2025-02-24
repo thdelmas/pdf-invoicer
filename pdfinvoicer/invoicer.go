@@ -383,7 +383,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 	// Header
 	pdf.SetFont("Arial", "B", 16)
-	pdf.CellFormat(190, 10, "INVOICE", "0", 1, "C", false, 0, "")
+	pdf.CellFormat(190, 10, "INVOICE - "+i.Number, "0", 1, "C", false, 0, "")
 	pdf.Ln(10)
 
 	// Issuer and Client information
@@ -415,10 +415,23 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 	pdf.Ln(10)
 
-	// Invoice details
+	// Invoice Summary
 	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", false, 0, "")
-	pdf.CellFormat(190, 7, fmt.Sprintf("Date: %s", i.EmitDate), "0", 1, "L", false, 0, "")
+	pdf.CellFormat(190, 7, "Invoice Summary", "0", 1, "C", false, 0, "")
+	pdf.Ln(2)
+	pdf.SetFont("Arial", "", 10)
+	// Invoice Number
+	pdf.CellFormat(95, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 0, "L", false, 0, "")
+	// Emission Date
+	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "R", false, 0, "")
+	// Operation Date
+	if i.OpDate != i.EmitDate {
+		pdf.CellFormat(95, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 0, "L", false, 0, "")
+	}
+	// Due Date
+	pdf.CellFormat(95, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "R", false, 0, "")
+	// Total Amount
+	pdf.CellFormat(95, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(i.Total)), "0", 0, "L", false, 0, "")
 	pdf.Ln(10)
 
 	// Amount breakdown table
