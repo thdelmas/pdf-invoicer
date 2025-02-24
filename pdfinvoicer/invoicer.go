@@ -366,7 +366,7 @@ func formatCurrency(amount float64) string {
 	return fmt.Sprintf("%.2f EUR", amount)
 }
 
-func (i *Invoice) GeneratePDF() error {
+func (i *Invoice) GeneratePDF(outputPath string) error {
 	log.Println("Generating PDF for invoice", i.Number)
 
 	log.Println("Invoice number:", i.Number)
@@ -488,7 +488,7 @@ func (i *Invoice) GeneratePDF() error {
 	pdf.SetFont("Arial", "", 10)
 	pdf.MultiCell(190, 5, "Payment Terms: Due within 30 days\nPlease include invoice number in payment reference", "0", "L", false)
 
-	err := pdf.OutputFileAndClose("invoice.pdf")
+	err := pdf.OutputFileAndClose(outputPath)
 	if err != nil {
 		panic(err)
 	}
