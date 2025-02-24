@@ -468,9 +468,6 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 		startX := pdf.GetX()
 		startY := pdf.GetY()
 
-		// Calculate maximum height needed for this row
-		pdf.SetFont("Arial", "", 7)
-
 		// Store current position
 		tmpX := pdf.GetX()
 		tmpY := pdf.GetY()
@@ -487,7 +484,6 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 		// Position for quantity
 		pdf.SetXY(startX+40, startY)
-		pdf.SetFont("Arial", "", 10)
 		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.3f", item.Quantity), "1", "C", false)
 
 		// Position for unit price
