@@ -436,22 +436,27 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 	// Amount breakdown table
 	pdf.SetFont("Arial", "B", 10)
-	cols := []float64{70, 40, 40, 40}
-	headers := []string{"Description", "Base Amount", "VAT (21%)", "Total"}
-
+	// Description, Quantity, Unit Price, VAT Rate, VAT Amount, Total
+	cols := []float64{40, 20, 30, 20, 30, 30}
+	headers := []string{"Description", "Qty", "Unit Price", "VAT Rate", "VAT Amount", "Total"}
 	for i, header := range headers {
 		pdf.CellFormat(cols[i], 7, header, "1", 0, "C", false, 0, "")
 	}
 	pdf.Ln(-1)
 
-	// Calculate amounts
-	total := i.Total
-
+	total := 0.0
 	pdf.SetFont("Arial", "", 10)
-	pdf.CellFormat(cols[0], 7, "Professional Services", "1", 0, "L", false, 0, "")
-	pdf.CellFormat(cols[1], 7, formatCurrency(i.BaseAmount), "1", 0, "R", false, 0, "")
-	pdf.CellFormat(cols[2], 7, formatCurrency(i.VATAmount), "1", 0, "R", false, 0, "")
-	pdf.CellFormat(cols[3], 7, formatCurrency(total), "1", 1, "R", false, 0, "")
+	for _, item := range i.Items {
+		pdf.CellFormat(cols[0], 7, item.Description, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(cols[1], 7, fmt.Sprintf("%.2f", item.Quantity), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(cols[2], 7, formatCurrency(item.UnitPrice), "1", 0, "R", false, 0, "")
+		pdf.CellFormat(cols[3], 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(cols[4], 7, formatCurrency(item.VATAmount), "1", 0, "R", false, 0, "")
+		pdf.CellFormat(cols[5], 7, formatCurrency(item.Total), "1", 1, "R", false, 0, "")
+
+		total += item.Total
+	}
+
 	pdf.Ln(10)
 
 	// Total amount
