@@ -456,14 +456,50 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	for _, item := range i.Items {
 		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
 		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
+
+		startX := pdf.GetX()
+		startY := pdf.GetY()
+
+		// Calculate maximum height needed for this row
 		pdf.SetFont("Arial", "", 9)
+
+		// Store current position
+		tmpX := pdf.GetX()
+		tmpY := pdf.GetY()
+
+		// Measure description height without actually writing
 		pdf.MultiCell(40, 7, item.Description, "1", "L", false)
+		descHeight := pdf.GetY() - tmpY
+
+		// Reset position
+		pdf.SetXY(tmpX, tmpY)
+
+		// Now actually write all cells with proper positioning
+		pdf.MultiCell(40, 7, item.Description, "1", "L", false)
+
+		// Position for quantity
+		pdf.SetXY(startX+40, startY)
 		pdf.SetFont("Arial", "", 10)
-		pdf.MultiCell(20, 7, fmt.Sprintf("%.2f", item.Quantity), "1", "C", false)
-		pdf.MultiCell(30, 7, formatCurrency(item.UnitPrice), "1", "R", false)
-		pdf.MultiCell(20, 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", "C", false)
-		pdf.MultiCell(30, 7, formatCurrency(item.VATAmount), "1", "R", false)
-		pdf.MultiCell(30, 7, formatCurrency(itemTotal), "1", "R", false)
+		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.2f", item.Quantity), "1", "C", false)
+
+		// Position for unit price
+		pdf.SetXY(startX+60, startY)
+		pdf.MultiCell(30, descHeight, formatCurrency(item.UnitPrice), "1", "R", false)
+
+		// Position for VAT rate
+		pdf.SetXY(startX+90, startY)
+		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", "C", false)
+
+		// Position for VAT amount
+		pdf.SetXY(startX+110, startY)
+		pdf.MultiCell(30, descHeight, formatCurrency(item.VATAmount), "1", "R", false)
+
+		// Position for total
+		pdf.SetXY(startX+140, startY)
+		pdf.MultiCell(30, descHeight, formatCurrency(itemTotal), "1", "R", false)
+
+		// Move to next row
+		pdf.SetY(startY + descHeight)
 	}
 
 	pdf.Ln(10)
