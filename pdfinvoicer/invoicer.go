@@ -487,11 +487,11 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 		// Position for quantity
 		pdf.SetXY(startX+40, startY)
-		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.3f", item.Quantity), "1", "C", false)
+		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.2f", item.Quantity), "1", "C", false)
 
 		// Position for unit price
 		pdf.SetXY(startX+60, startY)
-		pdf.MultiCell(30, descHeight, formatCurrency(item.UnitPrice), "1", "R", false)
+		pdf.MultiCell(30, descHeight, fmt.Sprintf("%.3f EUR", item.UnitPrice), "1", "R", false)
 
 		// Position for VAT rate
 		pdf.SetXY(startX+90, startY)
