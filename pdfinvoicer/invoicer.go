@@ -433,7 +433,9 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.Ln(2)
 	pdf.SetFont("Arial", "", 10)
 	// Invoice Number
+	pdf.SetTextColor(255, 255, 255)
 	pdf.CellFormat(95, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", true, 0, "")
+	pdf.SetTextColor(0, 0, 0)
 	// Emission Date
 	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	// Operation Date
