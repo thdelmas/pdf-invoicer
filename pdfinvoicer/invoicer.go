@@ -461,7 +461,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 		startY := pdf.GetY()
 
 		// Calculate maximum height needed for this row
-		pdf.SetFont("Arial", "", 9)
+		pdf.SetFont("Arial", "", 7)
 
 		// Store current position
 		tmpX := pdf.GetX()
