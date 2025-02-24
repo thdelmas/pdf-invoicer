@@ -397,13 +397,13 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.CellFormat(95, 7, "From:", "0", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, "To:", "0", 1, "R", false, 0, "")
 
-	pdf.SetFont("Arial", "B", 12)
+	pdf.SetFont("Arial", "", 12)
 
 	// Line 2: Company Names
 	pdf.CellFormat(95, 7, i.Issuer.Name, "0", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, i.Client.Name, "0", 1, "R", false, 0, "")
 
-	pdf.SetFont("Arial", "I", 10)
+	pdf.SetFont("Arial", "", 10)
 	// Line 3 & 4: Addresses
 	issuerAddress := formatAddress(i.Issuer.Address)
 	clientAddress := formatAddress(i.Client.Address)
@@ -436,20 +436,20 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.SetFont("Arial", "", 10)
 	// Invoice Number
 	pdf.SetTextColor(255, 255, 255)
-	pdf.CellFormat(50, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", true, 0, "")
+	pdf.CellFormat(65, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", true, 0, "")
 	pdf.SetTextColor(0, 0, 0)
 	// Emission Date
 	pdf.SetFillColor(200, 200, 200)
-	pdf.CellFormat(50, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
+	pdf.CellFormat(65, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
 	// Operation Date
 	if i.OpDate != i.EmitDate {
-		pdf.CellFormat(50, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
+		pdf.CellFormat(65, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
 	}
 	// Due Date
-	pdf.CellFormat(50, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
+	pdf.CellFormat(65, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "L", true, 0, "")
 	// Total Amount
 	invoiceTotal = truncateCurrency(invoiceTotal)
-	pdf.CellFormat(50, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(invoiceTotal)), "0", 1, "L", true, 0, "")
+	pdf.CellFormat(65, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(invoiceTotal)), "0", 1, "L", true, 0, "")
 	pdf.Ln(10)
 
 	// Amount breakdown table
