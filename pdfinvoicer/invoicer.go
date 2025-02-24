@@ -367,7 +367,10 @@ func formatAddress(address Address) string {
 }*/
 
 func formatCurrency(amount float64) string {
-	return fmt.Sprintf("%.2f EUR", amount)
+	// truncate to 2 decimal places (no round up)
+	amount = float64(int(amount*100)) / 100
+
+	return fmt.Sprintf("%.3f EUR", amount)
 }
 
 func (i *Invoice) GeneratePDF(outputPath string) error {
@@ -480,7 +483,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 		// Position for quantity
 		pdf.SetXY(startX+40, startY)
 		pdf.SetFont("Arial", "", 10)
-		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.2f", item.Quantity), "1", "C", false)
+		pdf.MultiCell(20, descHeight, fmt.Sprintf("%.3f", item.Quantity), "1", "C", false)
 
 		// Position for unit price
 		pdf.SetXY(startX+60, startY)
