@@ -2,8 +2,11 @@ package pdfinvoicer
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/go-pdf/fpdf"
 )
 
 type Address struct {
@@ -59,8 +62,9 @@ type Invoice struct {
 
 	Paid bool // Payment status (true if paid, false otherwise)
 
-	Notes string // Additional notes or comments
-	Ref   string // Reference or internal tracking number
+	Notes    string // Additional notes or comments
+	Ref      string // Reference or internal tracking number
+	LogoPath string // Path to the logo to include in the invoice
 }
 
 func checkAddress(address Address) error {
@@ -297,6 +301,71 @@ func NewInvoice(number string, emitDate, opDate, dueDate time.Time, issuer Issue
 	return invoice, nil
 }
 
+func formatAddress(address Address) string {
+	var formatted string
+
+	formatted += fmt.Sprintf("%s %s\n", address.Street, address.StreetNumber)
+	if address.Stairs != "" {
+		formatted += fmt.Sprintf("Stairs: %s\n", address.Stairs)
+	}
+	if address.Floor != "" {
+		formatted += fmt.Sprintf("Floor: %s\n", address.Floor)
+	}
+	if address.Door != "" {
+		formatted += fmt.Sprintf("Door: %s\n", address.Door)
+	}
+	formatted += fmt.Sprintf("%s %s\n", address.ZipCode, address.City)
+	if address.State != "" {
+		formatted += fmt.Sprintf("%s\n", address.State)
+	}
+	formatted += fmt.Sprintf("%s\n", address.Country)
+
+	return formatted
+}
+
+/*func addHeader(pdf *fpdf.Fpdf, invoice Invoice) {
+	// Add logo if path is provided
+	if invoice.LogoPath != "" {
+		pdf.ImageOptions(
+			invoice.LogoPath,
+			10, // x position
+			10, // y position
+			30, // width
+			0,  // height (0 = auto-calculated)
+			false,
+			fpdf.ImageOptions{ImageType: "", ReadDpi: true},
+			0,
+			"",
+		)
+	}
+
+	// Company name in header (to the right of logo)
+	pdf.SetFont("Arial", "B", 16)
+	pdf.SetXY(45, 15)
+	pdf.CellFormat(100, 10, invoice.Issuer.Name, "0", 0, "L", false, 0, "")
+
+	// Add contact info in smaller font
+	pdf.SetFont("Arial", "", 8)
+	pdf.SetXY(45, 25)
+	pdf.CellFormat(100, 5, fmt.Sprintf("%s %s, %s %s",
+		invoice.Issuer.Address.Street,
+		invoice.Issuer.Address.StreetNumber,
+		invoice.Issuer.Address.ZipCode,
+		invoice.Issuer.Address.City),
+		"0", 1, "L", false, 0, "")
+
+	// Add horizontal line under header
+	pdf.SetLineWidth(0.5)
+	pdf.Line(10, 40, 200, 40)
+
+	// Reset position for rest of document
+	pdf.SetY(50)
+}*/
+
+func formatCurrency(amount float64) string {
+	return fmt.Sprintf("%.2f EUR", amount)
+}
+
 func (i *Invoice) GeneratePDF() error {
 	log.Println("Generating PDF for invoice", i.Number)
 
@@ -353,6 +422,76 @@ func (i *Invoice) GeneratePDF() error {
 
 	log.Println("Notes:", i.Notes)
 	log.Println("Reference:", i.Ref)
+
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.SetAutoPageBreak(true, 10)
+	pdf.AddPage()
+
+	// Use a font that supports UTF-8
+	pdf.AddUTF8Font("Arial", "", "font.ttf")
+	pdf.SetFont("Arial", "", 12)
+
+	// Header
+	pdf.SetFont("Arial", "B", 16)
+	pdf.CellFormat(190, 10, "INVOICE", "0", 1, "C", false, 0, "")
+	pdf.Ln(10)
+
+	// Issuer and Client information
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(95, 7, "From:", "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, "To:", "0", 1, "R", false, 0, "")
+
+	pdf.SetFont("Arial", "", 10)
+	issuerAddress := formatAddress(i.Issuer.Address)
+	clientAddress := formatAddress(i.Client.Address)
+
+	// Using MultiCell for addresses to handle multiple lines
+	currentY := pdf.GetY()
+	pdf.MultiCell(95, 5, issuerAddress, "0", "L", false)
+	pdf.SetXY(105, currentY)
+	pdf.MultiCell(95, 5, clientAddress, "0", "R", false)
+
+	pdf.Ln(10)
+
+	// Invoice details
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 1, "L", false, 0, "")
+	pdf.CellFormat(190, 7, fmt.Sprintf("Date: %s", i.EmitDate), "0", 1, "L", false, 0, "")
+	pdf.Ln(10)
+
+	// Amount breakdown table
+	pdf.SetFont("Arial", "B", 10)
+	cols := []float64{70, 40, 40, 40}
+	headers := []string{"Description", "Base Amount", "VAT (21%)", "Total"}
+
+	for i, header := range headers {
+		pdf.CellFormat(cols[i], 7, header, "1", 0, "C", false, 0, "")
+	}
+	pdf.Ln(-1)
+
+	// Calculate amounts
+	total := i.Total
+
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(cols[0], 7, "Professional Services", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(cols[1], 7, formatCurrency(i.BaseAmount), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(cols[2], 7, formatCurrency(i.VATAmount), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(cols[3], 7, formatCurrency(total), "1", 1, "R", false, 0, "")
+	pdf.Ln(10)
+
+	// Total amount
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(total)), "0", 1, "R", false, 0, "")
+
+	// Payment terms
+	pdf.Ln(20)
+	pdf.SetFont("Arial", "", 10)
+	pdf.MultiCell(190, 5, "Payment Terms: Due within 30 days\nPlease include invoice number in payment reference", "0", "L", false)
+
+	err := pdf.OutputFileAndClose("invoice.pdf")
+	if err != nil {
+		panic(err)
+	}
 
 	return nil
 }
