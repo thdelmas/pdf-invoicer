@@ -425,7 +425,8 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	invoiceTotal := 0.0
 	for _, item := range i.Items {
 		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
-		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
+		item.VATAmount = item.VATRate * itemTotalWithoutVAT
+		itemTotal := itemTotalWithoutVAT + item.VATAmount
 		invoiceTotal += truncateCurrency(itemTotal)
 	}
 
@@ -465,7 +466,8 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.SetFont("Arial", "", 10)
 	for _, item := range i.Items {
 		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
-		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
+		item.VATAmount = item.VATRate * itemTotalWithoutVAT
+		itemTotal := itemTotalWithoutVAT + item.VATAmount
 		itemTotal = truncateCurrency(itemTotal)
 
 		startX := pdf.GetX()
