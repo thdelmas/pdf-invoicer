@@ -393,20 +393,22 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	// Issuer and Client information
 
 	// Line 1: Titles
-	pdf.SetFont("Arial", "B", 12)
+	pdf.SetFont("Arial", "", 10)
 	pdf.CellFormat(95, 7, "From:", "0", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, "To:", "0", 1, "R", false, 0, "")
 
-	pdf.SetFont("Arial", "", 10)
+	pdf.SetFont("Arial", "B", 12)
 
 	// Line 2: Company Names
 	pdf.CellFormat(95, 7, i.Issuer.Name, "0", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, i.Client.Name, "0", 1, "R", false, 0, "")
 
+	pdf.SetFont("Arial", "I", 10)
 	// Line 3 & 4: Addresses
 	issuerAddress := formatAddress(i.Issuer.Address)
 	clientAddress := formatAddress(i.Client.Address)
 
+	pdf.SetFont("Arial", "", 10)
 	currentY := pdf.GetY()
 	pdf.MultiCell(95, 5, issuerAddress, "0", "L", false)
 	pdf.SetXY(105, currentY)
