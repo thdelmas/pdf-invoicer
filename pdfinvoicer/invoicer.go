@@ -515,10 +515,16 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.SetFont("Arial", "B", 12)
 	pdf.CellFormat(190, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(invoiceTotal)), "0", 1, "R", false, 0, "")
 
-	// Payment terms
-	pdf.Ln(20)
-	pdf.SetFont("Arial", "", 10)
-	pdf.MultiCell(190, 5, "Payment Terms: Due within 30 days\nPlease include invoice number in payment reference", "0", "L", false)
+	if i.Notes != "" {
+		pdf.Ln(20)
+		pdf.SetFont("Arial", "", 10)
+		pdf.MultiCell(190, 5, i.Notes, "0", "L", false)
+	}
+
+	if i.Ref != "" {
+		pdf.Ln(5)
+		pdf.CellFormat(190, 7, fmt.Sprintf("Reference: %s", i.Ref), "0", 1, "L", false, 0, "")
+	}
 
 	err := pdf.OutputFileAndClose(outputPath)
 	if err != nil {
