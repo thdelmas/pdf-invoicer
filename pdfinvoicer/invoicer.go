@@ -415,7 +415,15 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 	pdf.Ln(10)
 
-	// Invoice Summary
+	//Emsure Total Amount is correct
+	invoiceTotal := 0.0
+	for _, item := range i.Items {
+		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
+		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
+		invoiceTotal += itemTotal
+	}
+
+	// Invoice Summary in the same column
 	pdf.SetFont("Arial", "B", 12)
 	pdf.CellFormat(190, 7, "Invoice Summary", "0", 1, "C", false, 0, "")
 	pdf.Ln(2)
@@ -423,13 +431,13 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	// Invoice Number
 	pdf.CellFormat(95, 7, fmt.Sprintf("Invoice Number: %s", i.Number), "0", 0, "L", false, 0, "")
 	// Emission Date
-	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "R", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Emission Date: %s", i.EmitDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	// Operation Date
 	if i.OpDate != i.EmitDate {
 		pdf.CellFormat(95, 7, fmt.Sprintf("Operation Date: %s", i.OpDate.Format("02/01/2006")), "0", 0, "L", false, 0, "")
 	}
 	// Due Date
-	pdf.CellFormat(95, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "R", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("Due Date: %s", i.DueDate.Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	// Total Amount
 	pdf.CellFormat(95, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(i.Total)), "0", 0, "L", false, 0, "")
 	pdf.Ln(10)
@@ -444,10 +452,10 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	}
 	pdf.Ln(-1)
 
-	total := 0.0
 	pdf.SetFont("Arial", "", 10)
 	for _, item := range i.Items {
-		itemTotal := item.Quantity*item.UnitPrice + item.VATAmount
+		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
+		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
 		pdf.CellFormat(cols[0], 7, item.Description, "1", 0, "L", false, 0, "")
 		pdf.CellFormat(cols[1], 7, fmt.Sprintf("%.2f", item.Quantity), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(cols[2], 7, formatCurrency(item.UnitPrice), "1", 0, "R", false, 0, "")
@@ -458,15 +466,13 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 			log.Println("Item total amount does not match calculated value")
 		}
 		pdf.CellFormat(cols[5], 7, formatCurrency(itemTotal), "1", 1, "R", false, 0, "")
-
-		total += item.Total
 	}
 
 	pdf.Ln(10)
 
 	// Total amount
 	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(total)), "0", 1, "R", false, 0, "")
+	pdf.CellFormat(190, 7, fmt.Sprintf("Total Amount: %s", formatCurrency(invoiceTotal)), "0", 1, "R", false, 0, "")
 
 	// Payment terms
 	pdf.Ln(20)
