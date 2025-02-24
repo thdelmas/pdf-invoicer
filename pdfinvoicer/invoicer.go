@@ -459,11 +459,11 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 		pdf.SetFont("Arial", "", 9)
 		pdf.MultiCell(40, 7, item.Description, "1", "L", false)
 		pdf.SetFont("Arial", "", 10)
-		pdf.CellFormat(20, 7, fmt.Sprintf("%.2f", item.Quantity), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(30, 7, formatCurrency(item.UnitPrice), "1", 0, "R", false, 0, "")
-		pdf.CellFormat(20, 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(30, 7, formatCurrency(item.VATAmount), "1", 0, "R", false, 0, "")
-		pdf.CellFormat(30, 7, formatCurrency(itemTotal), "1", 1, "R", false, 0, "")
+		pdf.MultiCell(20, 7, fmt.Sprintf("%.2f", item.Quantity), "1", "C", false)
+		pdf.MultiCell(30, 7, formatCurrency(item.UnitPrice), "1", "R", false)
+		pdf.MultiCell(20, 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", "C", false)
+		pdf.MultiCell(30, 7, formatCurrency(item.VATAmount), "1", "R", false)
+		pdf.MultiCell(30, 7, formatCurrency(itemTotal), "1", "R", false)
 	}
 
 	pdf.Ln(10)
