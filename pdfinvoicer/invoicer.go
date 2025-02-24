@@ -447,12 +447,17 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	total := 0.0
 	pdf.SetFont("Arial", "", 10)
 	for _, item := range i.Items {
+		itemTotal := item.Quantity*item.UnitPrice + item.VATAmount
 		pdf.CellFormat(cols[0], 7, item.Description, "1", 0, "L", false, 0, "")
 		pdf.CellFormat(cols[1], 7, fmt.Sprintf("%.2f", item.Quantity), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(cols[2], 7, formatCurrency(item.UnitPrice), "1", 0, "R", false, 0, "")
 		pdf.CellFormat(cols[3], 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(cols[4], 7, formatCurrency(item.VATAmount), "1", 0, "R", false, 0, "")
-		pdf.CellFormat(cols[5], 7, formatCurrency(item.Total), "1", 1, "R", false, 0, "")
+
+		if item.Total != itemTotal {
+			log.Println("Item total amount does not match calculated value")
+		}
+		pdf.CellFormat(cols[5], 7, formatCurrency(itemTotal), "1", 1, "R", false, 0, "")
 
 		total += item.Total
 	}
