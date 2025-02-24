@@ -38,7 +38,7 @@ type Client struct {
 
 type Item struct {
 	Description string  // Description of the service or product
-	Quantity    float64 // Quantity of items/services (if applicable)
+	Quantity    int     // Quantity of items/services (if applicable)
 	UnitPrice   float64 // Price per unit (if applicable)
 	VATRate     float64 // VAT rate applied (21%, 10%, 4%, or 0 for exempt)
 	VATAmount   float64 // Calculated VAT amount
@@ -190,7 +190,7 @@ func NewClient(name string, address Address, nif string) (Client, error) {
 	return client, nil
 }
 
-func NewItem(description string, quantity, unitPrice, vatRate float64) (Item, error) {
+func NewItem(description string, quantity int, unitPrice, vatRate float64) (Item, error) {
 	if description == "" {
 		err := errors.New("Item description is mandatory")
 		return Item{}, err
@@ -218,8 +218,8 @@ func NewItem(description string, quantity, unitPrice, vatRate float64) (Item, er
 		VATRate:     vatRate,
 	}
 
-	item.VATAmount = item.Quantity * item.UnitPrice * item.VATRate
-	item.Total = item.Quantity*item.UnitPrice + item.VATAmount
+	item.VATAmount = float64(item.Quantity) * item.UnitPrice * item.VATRate
+	item.Total = float64(item.Quantity)*item.UnitPrice + item.VATAmount
 
 	return item, nil
 }
@@ -272,7 +272,7 @@ func NewInvoice(number string, emitDate, opDate, dueDate time.Time, issuer Issue
 	total := 0.0
 
 	for _, item := range items {
-		baseAmount += item.Quantity * item.UnitPrice
+		baseAmount += float64(item.Quantity) * item.UnitPrice
 		vatAmount += item.VATAmount
 		total += item.Total
 	}
@@ -418,7 +418,7 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	//Emsure Total Amount is correct
 	invoiceTotal := 0.0
 	for _, item := range i.Items {
-		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
+		itemTotalWithoutVAT := float64(item.Quantity) * item.UnitPrice
 		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
 		invoiceTotal += itemTotal
 	}
@@ -454,10 +454,10 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 
 	pdf.SetFont("Arial", "", 10)
 	for _, item := range i.Items {
-		itemTotalWithoutVAT := item.Quantity * item.UnitPrice
+		itemTotalWithoutVAT := float64(item.Quantity) * item.UnitPrice
 		itemTotal := itemTotalWithoutVAT + item.VATRate*itemTotalWithoutVAT
 		pdf.CellFormat(cols[0], 7, item.Description, "1", 0, "L", false, 0, "")
-		pdf.CellFormat(cols[1], 7, fmt.Sprintf("%.2f", item.Quantity), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(cols[1], 7, fmt.Sprintf("%d", item.Quantity), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(cols[2], 7, formatCurrency(item.UnitPrice), "1", 0, "R", false, 0, "")
 		pdf.CellFormat(cols[3], 7, fmt.Sprintf("%.0f%%", item.VATRate*100), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(cols[4], 7, formatCurrency(item.VATAmount), "1", 0, "R", false, 0, "")
