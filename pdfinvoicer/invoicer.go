@@ -304,21 +304,25 @@ func NewInvoice(number string, emitDate, opDate, dueDate time.Time, issuer Issue
 func formatAddress(address Address) string {
 	var formatted string
 
-	formatted += fmt.Sprintf("%s %s\n", address.Street, address.StreetNumber)
+	// Line 1: Street and Street Number, Stairs, Floor, Door
+	formatted += fmt.Sprintf("%s %s", address.Street, address.StreetNumber)
 	if address.Stairs != "" {
-		formatted += fmt.Sprintf("Stairs: %s\n", address.Stairs)
+		formatted += fmt.Sprintf(", %s", address.Stairs)
 	}
 	if address.Floor != "" {
-		formatted += fmt.Sprintf("Floor: %s\n", address.Floor)
+		formatted += fmt.Sprintf(", %s", address.Floor)
 	}
 	if address.Door != "" {
-		formatted += fmt.Sprintf("Door: %s\n", address.Door)
+		formatted += fmt.Sprintf(", %s", address.Door)
 	}
-	formatted += fmt.Sprintf("%s %s\n", address.ZipCode, address.City)
+	formatted += "\n"
+
+	// Line 2: Zip Code, City, State, Country
+	formatted += fmt.Sprintf("%s %s", address.ZipCode, address.City)
 	if address.State != "" {
-		formatted += fmt.Sprintf("%s\n", address.State)
+		formatted += fmt.Sprintf(", %s", address.State)
 	}
-	formatted += fmt.Sprintf("%s\n", address.Country)
+	formatted += fmt.Sprintf(", %s", address.Country)
 
 	return formatted
 }
@@ -369,60 +373,6 @@ func formatCurrency(amount float64) string {
 func (i *Invoice) GeneratePDF(outputPath string) error {
 	log.Println("Generating PDF for invoice", i.Number)
 
-	log.Println("Invoice number:", i.Number)
-	log.Println("Emit date:", i.EmitDate)
-	log.Println("Operation date:", i.OpDate)
-	log.Println("Due date:", i.DueDate)
-
-	log.Println("Issuer name:", i.Issuer.Name)
-	log.Println("Issuer NIF:", i.Issuer.NIF)
-	log.Println("Issuer IBAN:", i.Issuer.IBAN)
-	log.Println("Issuer email:", i.Issuer.Email)
-	log.Println("Issuer phone:", i.Issuer.Phone)
-
-	log.Println("Issuer address:")
-	log.Println("  Street:", i.Issuer.Address.Street)
-	log.Println("  Street number:", i.Issuer.Address.StreetNumber)
-	log.Println("  Stairs:", i.Issuer.Address.Stairs)
-	log.Println("  Floor:", i.Issuer.Address.Floor)
-	log.Println("  Door:", i.Issuer.Address.Door)
-	log.Println("  Zip code:", i.Issuer.Address.ZipCode)
-	log.Println("  City:", i.Issuer.Address.City)
-	log.Println("  State:", i.Issuer.Address.State)
-	log.Println("  Country:", i.Issuer.Address.Country)
-
-	log.Println("Client name:", i.Client.Name)
-	log.Println("Client NIF:", i.Client.NIF)
-	log.Println("Client address:")
-	log.Println("  Street:", i.Client.Address.Street)
-	log.Println("  Street number:", i.Client.Address.StreetNumber)
-	log.Println("  Stairs:", i.Client.Address.Stairs)
-	log.Println("  Floor:", i.Client.Address.Floor)
-	log.Println("  Door:", i.Client.Address.Door)
-	log.Println("  Zip code:", i.Client.Address.ZipCode)
-	log.Println("  City:", i.Client.Address.City)
-	log.Println("  State:", i.Client.Address.State)
-	log.Println("  Country:", i.Client.Address.Country)
-
-	log.Println("Items:")
-	for _, item := range i.Items {
-		log.Println("  Description:", item.Description)
-		log.Println("  Quantity:", item.Quantity)
-		log.Println("  Unit price:", item.UnitPrice)
-		log.Println("  VAT rate:", item.VATRate)
-		log.Println("  VAT amount:", item.VATAmount)
-		log.Println("  Total:", item.Total)
-	}
-
-	log.Println("Base amount:", i.BaseAmount)
-	log.Println("VAT amount:", i.VATAmount)
-	log.Println("Total:", i.Total)
-
-	log.Println("Paid:", i.Paid)
-
-	log.Println("Notes:", i.Notes)
-	log.Println("Reference:", i.Ref)
-
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetAutoPageBreak(true, 10)
 	pdf.AddPage()
@@ -437,19 +387,31 @@ func (i *Invoice) GeneratePDF(outputPath string) error {
 	pdf.Ln(10)
 
 	// Issuer and Client information
+
+	// Line 1: Titles
 	pdf.SetFont("Arial", "B", 12)
 	pdf.CellFormat(95, 7, "From:", "0", 0, "L", false, 0, "")
 	pdf.CellFormat(95, 7, "To:", "0", 1, "R", false, 0, "")
 
 	pdf.SetFont("Arial", "", 10)
+
+	// Line 2: Company Names
+	pdf.CellFormat(95, 7, i.Issuer.Name, "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, i.Client.Name, "0", 1, "R", false, 0, "")
+
+	// Line 3 & 4: Addresses
 	issuerAddress := formatAddress(i.Issuer.Address)
 	clientAddress := formatAddress(i.Client.Address)
 
-	// Using MultiCell for addresses to handle multiple lines
 	currentY := pdf.GetY()
 	pdf.MultiCell(95, 5, issuerAddress, "0", "L", false)
 	pdf.SetXY(105, currentY)
 	pdf.MultiCell(95, 5, clientAddress, "0", "R", false)
+
+	// Line 5: NIF
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(95, 7, fmt.Sprintf("NIF: %s", i.Issuer.NIF), "0", 0, "L", false, 0, "")
+	pdf.CellFormat(95, 7, fmt.Sprintf("NIF: %s", i.Client.NIF), "0", 1, "R", false, 0, "")
 
 	pdf.Ln(10)
 
